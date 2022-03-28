@@ -1,0 +1,9 @@
+---
+# Wether to install Containerd or not
+containerd_install: true
+
+# Containerd version
+containerd_version: 1.6.1
+
+# Directory where Containerd should be persisti the data. Defaults to '/var/lib/containerd'
+containerd_data_dir: '/mnt/data/containerd'

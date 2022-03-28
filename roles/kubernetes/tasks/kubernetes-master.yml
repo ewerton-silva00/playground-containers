@@ -1,0 +1,132 @@
+---
+- name: Kubernetes | Disable SWAP memory
+  ansible.builtin.command: >-
+    swapoff --all
+  when: ansible_swaptotal_mb > 0
+  tags: kubernetes
+
+- name: Kubernetes | Remove swapfile from /etc/fstab
+  ansible.posix.mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+  tags: kubernetes
+
+- name: Kubernetes | Create the kubernetes.conf to load modules on boot
+  ansible.builtin.copy:
+    src: kubernetes.conf
+    dest: /etc/modules-load.d/kubernetes.conf
+    owner: root
+    group: root
+    mode: 0644
+  tags: kubernetes
+
+- name: Kubernetes | Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - overlay
+    - br_netfilter
+  tags: kubernetes
+
+- name: Kubernetes | Set required sysctl parameters
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+    reload: yes
+  loop:
+    - { name: 'net.ipv4.ip_forward', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+    - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+  tags: kubernetes
+
+- name: Kubernetes | Install general dependencies
+  ansible.builtin.apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - git
+  tags: kubernetes
+
+- name: Kubernetes | Download the Google public signing key
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+    state: present
+  tags: kubernetes
+
+- name: Kubernetes | Add the Kubernetes repository
+  ansible.builtin.apt_repository:
+    repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+    filename: kubernetes
+    state: present
+  tags: kubernetes
+
+- name: Kubernetes | Install kubeadm, kubelet and kubectl
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - kubeadm={{ kubernetes_packages_version }}
+      - kubelet={{ kubernetes_packages_version }}
+      - kubectl={{ kubernetes_packages_version }}
+  tags: kubernetes
+
+- name: Kubernetes | Prevent kubeadm, kubelet and kubectl from being upgraded
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubeadm
+    - kubelet
+    - kubectl
+  tags: kubernetes
+
+- name: Kubernetes | Initialize the Kubernetes cluster using kubeadm
+  ansible.builtin.command: >-
+    kubeadm init
+    --kubernetes-version="{{ kubernetes_version }}"
+    --apiserver-advertise-address="{{ kubernetes_current_ip }}"
+    --apiserver-cert-extra-sans="{{ kubernetes_current_ip }}"
+    --node-name "{{ ansible_hostname }}"
+    --pod-network-cidr="{{ kubernetes_pod_network_cidr | default('10.244.0.0/16') }}"
+  tags: kubernetes
+
+- name: Kubernetes | Create ~/.kube directory to {{ kubernetes_nonroot_user | default('vagrant', true) }}
+  ansible.builtin.file:
+    path: "/home/{{ kubernetes_nonroot_user | default('vagrant', true) }}/.kube"
+    state: directory
+    owner: "{{ kubernetes_nonroot_user | default('vagrant', true) }}"
+    group: "{{ kubernetes_nonroot_user | default('vagrant', true) }}"
+    mode: 0700
+  register: kubeconfig_directory
+  tags: kubernetes
+
+- name: Kubernetes | Setup kubeconfig file for {{ kubernetes_nonroot_user | default('vagrant', true) }} user
+  ansible.builtin.copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ kubeconfig_directory.path }}/config"
+    owner: "{{ kubernetes_nonroot_user | default('vagrant', true) }}"
+    group: "{{ kubernetes_nonroot_user | default('vagrant', true) }}"
+    mode: 0600
+    remote_src: yes
+  tags: kubernetes
+
+- name: Kubernetes | Untaint node to allow pods to be deployed to in that single-node cluster
+  become: false
+  ansible.builtin.command: >-
+    kubectl taint nodes --all node-role.kubernetes.io/master-
+  tags: kubernetes
+
+- name: Kubernetes | Install Calico pod network
+  become: false
+  ansible.builtin.command: >-
+    kubectl create --filename https://projectcalico.docs.tigera.io/manifests/calico.yaml
+  tags: kubernetes

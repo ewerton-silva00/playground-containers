@@ -1,0 +1,40 @@
+---
+- name: Helm | Download Helm tarball file v{{ helm_version }}
+  ansible.builtin.get_url:
+    url: "https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    dest: "{{ download_dir }}/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    checksum: "sha256:https://get.helm.sh/helm-v3.8.1-linux-amd64.tar.gz.sha256sum"
+    force: yes
+    validate_certs: yes
+    mode: 0644
+  register: helm_downloaded
+  tags: helm
+
+- name: Helm | Unarchive Helm tarball file
+  ansible.builtin.unarchive:
+    src: "{{ download_dir }}/helm-v{{ helm_version }}-linux-amd64.tar.gz"
+    dest: "{{ download_dir }}"
+    extra_opts:
+      - '--strip-components=1'
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0644
+  tags: helm
+
+- name: Helm | Copy Helm binary to OS PATH
+  ansible.builtin.copy:
+    src: "{{ download_dir }}/helm"
+    dest: "{{ helm_install_dir }}/helm"
+    force: yes
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+  tags: helm
+
+- name: Helm | Install Helm diff plugin for better idempotency
+  kubernetes.core.helm_plugin:
+    plugin_path: https://github.com/databus23/helm-diff
+    state: present
+  tags: helm

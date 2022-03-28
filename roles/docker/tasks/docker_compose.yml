@@ -1,0 +1,21 @@
+---
+- name: Docker Compose | Install Docker Compose v{{ docker_compose_version }}
+  ansible.builtin.get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
+    dest: "{{ docker_compose_install_dir | default('/usr/local/bin') }}/docker-compose"
+    validate_certs: yes
+    owner: root
+    group: root
+    mode: 0755
+  tags: docker_compose
+
+- name: Docker Compose | Install command-line completion
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/docker/compose/{{ docker_compose_version }}/contrib/completion/bash/docker-compose"
+    dest: /etc/bash_completion.d/docker-compose
+    validate_certs: yes
+    force: yes
+    owner: root
+    group: root
+    mode: 0644
+  tags: docker_compose

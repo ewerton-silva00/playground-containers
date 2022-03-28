@@ -1,0 +1,4 @@
+---
+download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '/.ansible/tmp/downloads') }}"
+
+kubernetes_current_ip: "{{ hostvars[inventory_hostname].ansible_host }}"

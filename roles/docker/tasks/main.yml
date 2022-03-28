@@ -1,0 +1,12 @@
+---
+- name: Docker | Include task list in play
+  include_tasks: docker.yml
+  tags:
+    - docker
+  when: docker_engine_install | bool
+
+- name: Docker Compose | Include task list in play
+  include_tasks: docker_compose.yml
+  tags:
+    - docker_compose
+  when: docker_compose_install | bool

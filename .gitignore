@@ -1,0 +1,11 @@
+.vagrant/
+.vscode/
+.collections/ansible_collections/
+
+# Python Virtual Environment Files
+bin/
+include/
+lib/
+lib64
+pyvenv.cfg
+share/

@@ -1,0 +1,8 @@
+{
+    "data-root": "{{ docker_engine_data_root | default('/var/lib/docker') }}",
+    "log-driver": "{{ docker_engine_log_driver | default('json-file') }}",
+    "log-opts": {
+        "max-file": "{{ docker_engine_log_max_file }}",
+        "max-size": "{{ docker_engine_log_max_size }}"
+    }
+}

@@ -1,0 +1,10 @@
+---
+all:
+  hosts:
+    vagrant:
+      ansible_host: 10.10.10.10
+      ansible_port: 22
+      ansible_user: vagrant
+      ansible_password: vagrant
+      ansible_python.version.major: 3
+      ansible_python_interpreter: /usr/bin/python3

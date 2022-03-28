@@ -1,0 +1,10 @@
+---
+- name: Ansible Playbook to install and configure Lightweight Kubernetes (k3s)
+  hosts: all
+  gather_facts: true
+  any_errors_fatal: true
+  become: true
+  roles:
+    - role: k3s
+      tags:
+        - k3s

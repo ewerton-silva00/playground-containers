@@ -1,0 +1,27 @@
+---
+# Wether to install Kubernetes or not
+kubernetes_install: true
+
+# Kubernetes packages version (kubeadm, kubelet and kubectl)
+kubernetes_packages_version: 1.23.5-00
+
+# Kubernetes version
+kubernetes_version: 1.23.5
+
+# Kubernetes Pod Network CIDR. Defaults to '192.244.0.0/16'
+kubernetes_pod_network_cidr: ''
+
+# Non-root user where should be create the kubeconfig file. Defaults to 'vagrant'
+kubernetes_nonroot_user: ''
+
+# Wether to install Helm3 binary or not
+helm_install: true
+
+# Helm version
+helm_version: 3.8.1
+
+# Mirror to download Helm from
+helm_mirror: https://get.helm.sh
+
+# Directory where Helm should be installed
+helm_install_dir: /usr/local/bin

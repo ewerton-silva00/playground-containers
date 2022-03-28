@@ -1,0 +1,90 @@
+---
+# - name: Containerd | Create the containerd.conf to load modules on boot
+#   ansible.builtin.copy:
+#     src: containerd.conf
+#     dest: /etc/modules-load.d/containerd.conf
+#     owner: root
+#     group: root
+#     mode: 0644
+#   tags: containerd
+
+# - name: Containerd | Load kernel modules
+#   community.general.modprobe:
+#     name: "{{ item }}"
+#     state: present
+#   loop:
+#     - overlay
+#     - br_netfilter
+#   tags: containerd
+
+# - name: Containerd | Set required sysctl parameters
+#   ansible.posix.sysctl:
+#     name: "{{ item.name }}"
+#     value: "{{ item.value }}"
+#     sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+#     reload: yes
+#   loop:
+#     - { name: 'net.ipv4.ip_forward', value: '1' }
+#     - { name: 'net.bridge.bridge-nf-call-iptables', value: '1' }
+#     - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
+#   tags: containerd
+
+- name: Containerd | Install required library for seccomp
+  ansible.builtin.apt:
+    pkg:
+      - libseccomp2
+  tags: containerd
+
+- name: Containerd | Create download directory
+  ansible.builtin.file:
+    state: directory
+    dest: "{{ download_dir }}"
+    mode: 0755
+  tags: containerd
+
+- name: Containerd | Download containerd release tarball v{{ containerd_version }}
+  ansible.builtin.get_url:
+    url: "https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/cri-containerd-cni-{{ containerd_version }}-linux-amd64.tar.gz"
+    dest: "{{ download_dir }}/cri-containerd-cni-{{ containerd_version }}-linux-amd64.tar.gz"
+    checksum: sha256:https://github.com/containerd/containerd/releases/download/v{{ containerd_version }}/cri-containerd-cni-{{ containerd_version }}-linux-amd64.tar.gz.sha256sum
+    force: yes
+    validate_certs: yes
+    mode: 0644
+  register: containerd_downloaded
+  tags: containerd
+
+- name: Containerd | Unarchive containerd tarbal file
+  ansible.builtin.unarchive:
+    src: "{{ containerd_downloaded.dest }}"
+    dest: /
+    extra_opts:
+      - '--no-overwrite-dir'
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0755
+  notify: Reload Systemd
+  tags: containerd
+
+- name: Containerd | Create the /etc/containerd directory
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: 0755
+  tags: containerd
+
+- name: Containerd | Create containerd configuration file
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: 0644
+  tags: containerd
+
+- name: Containerd | Start containerd daemon
+  ansible.builtin.systemd:
+    name: containerd.service
+    state: started
+    enabled: yes
+  tags: containerd

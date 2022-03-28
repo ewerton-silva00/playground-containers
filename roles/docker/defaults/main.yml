@@ -1,0 +1,18 @@
+---
+docker_engine_install: true
+
+docker_engine_user: 'vagrant'
+
+docker_engine_data_root: '/mnt/data/docker'
+
+docker_engine_log_driver: 'json-file'
+
+docker_engine_log_max_file: 3
+
+docker_engine_log_max_size: 10m
+
+docker_compose_install: true
+
+docker_compose_version: 1.29.2
+
+docker_compose_install_dir: '/usr/local/bin'

@@ -1,0 +1,8 @@
+---
+- name: Ansible Playbook to install and configure Docker Engine and Docker Compose
+  hosts: all
+  gather_facts: true
+  any_errors_fatal: true
+  become: true
+  roles:
+  - role: docker
