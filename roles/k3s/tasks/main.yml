@@ -43,29 +43,14 @@
     daemon_reload: yes
   tags: k3s
 
-- name: K3s | Create ~/.kube directory to {{ k3s_server_nonroot_user | default('ansible_user', true) }} user
-  ansible.builtin.file:
-    path: "/home/{{ k3s_server_nonroot_user | default('ansible_user', true) }}/.kube"
-    state: directory
-    owner: "{{ k3s_server_nonroot_user | default('ansible_user', true) }}"
-    group: "{{ k3s_server_nonroot_user | default('ansible_user', true) }}"
-    mode: 0700
-  register: kubeconfig_directory_created
-  tags: k3s
-
-- name: K3s | Copy the kubeconfig file to /home/{{ k3s_server_nonroot_user | default('ansible_user', true) }}/.kube
-  ansible.builtin.copy:
-    src: /etc/rancher/k3s/k3s.yaml
-    dest: "{{ kubeconfig_directory_created.path }}/config"
-    owner: "{{ k3s_server_nonroot_user | default('ansible_user', true) }}"
-    group: "{{ k3s_server_nonroot_user | default('ansible_user', true) }}"
-    mode: 0600
-    remote_src: yes
-  tags: k3s
-
 - name: K3s | Create kubectl symlink
   ansible.builtin.file:
     src: /usr/local/bin/k3s
     dest: /usr/local/bin/kubectl
     state: link
+  tags: k3s
+
+- name: K3s | Kubectl command-line completion
+  ansible.builtin.shell:
+    cmd: /usr/local/bin/kubectl completion bash > /etc/bash_completion.d/kubectl
   tags: k3s

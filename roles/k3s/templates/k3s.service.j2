@@ -26,4 +26,13 @@ RestartSec=5s
 ExecStartPre=/bin/sh -xc '! /usr/bin/systemctl is-enabled --quiet nm-cloud-setup.service'
 ExecStartPre=-/sbin/modprobe br_netfilter
 ExecStartPre=-/sbin/modprobe overlay
-ExecStart=/usr/local/bin/k3s server --node-name {{ ansible_hostname }} --node-ip {{ node_ip }} --advertise-address {{ node_ip }} --cluster-cidr {{ k3s_server_cidr | default('10.42.0.0/16') }} --cluster-domain {{ k3s_server_cluster_domain | default('cluster.local') }} --data-dir {{ k3s_server_data_dir | default('/var/lib/rancher/k3s') }} --disable {{ k3s_server_disable_services | join(',') }} --disable-cloud-controller --write-kubeconfig-mode 644
+ExecStart=/usr/local/bin/k3s \
+    server \
+    --node-name "{{ ansible_hostname }}" \
+    --node-ip "{{ node_ip }}" \
+    --advertise-address "{{ node_ip }}" \
+    --data-dir "{{ k3s_server_data_dir | default('/var/lib/rancher/k3s') }}" \
+    --disable "{{ k3s_server_disable_services | join(',') }}" \
+    --default-local-storage-path "{{ k3s_server_local_storage_path | default('/var/lib/rancher/storage') }}" \
+    --disable-cloud-controller \
+    --write-kubeconfig-mode 644

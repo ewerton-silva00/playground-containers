@@ -10,13 +10,6 @@ k3s_server_data_dir: ''
 k3s_server_disable_services:
   - servicelb
   - traefik
-  - local-storage
 
-# Network CIDR to use for pod IPs. Defaults to '10.42.0.0/16'
-k3s_server_cluster_cidr: ''
-
-# Cluster domain. Defaults to 'cluster.local'
-k3s_server_cluster_domain: ''
-
-# Non-root user to administrate cluster. Defaults to 'ubuntu'
-k3s_server_nonroot_user: ''
+# Default local storage path for local provisioner storage class. Defaults to '/var/lib/rancher/k3s/storage'
+k3s_server_local_storage_path: ''
