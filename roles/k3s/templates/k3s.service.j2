@@ -34,5 +34,10 @@ ExecStart=/usr/local/bin/k3s \
     --data-dir "{{ k3s_server_data_dir | default('/var/lib/rancher/k3s') }}" \
     --disable "{{ k3s_server_disable_services | join(',') }}" \
     --default-local-storage-path "{{ k3s_server_local_storage_path | default('/var/lib/rancher/storage') }}" \
+{% for labels in k3s_server_node_labels %}
+    {% if k3s_server_node_labels is defined %}
+    --node-label "{{ labels }}" \
+    {% endif %}
+{% endfor %}
     --disable-cloud-controller \
     --write-kubeconfig-mode 644
